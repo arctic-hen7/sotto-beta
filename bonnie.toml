@@ -1,0 +1,14 @@
+version="0.3.2"
+
+[scripts]
+dev.cmd = [
+    "concurrently \"bonnie dev perseus\" \"bonnie dev tauri\""
+]
+dev.subcommands.perseus = [
+    # We need to serve as an actual server to get live reloading working (we're tricking Perseus pretty much)
+    "perseus export -sw --custom-watch !src-tauri --cargo-engine-path cargo-clif"
+]
+dev.subcommands.tauri = [
+    # This will fetch content from `dist/exported`
+    "cargo tauri dev"
+]
