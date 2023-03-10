@@ -6,5 +6,6 @@ use wasm_bindgen::prelude::*;
 #[cfg(client)]
 #[wasm_bindgen(module = "/src/tauri_glue.js")]
 extern "C" {
-    pub async fn greet(name: &str) -> JsValue;
+    #[wasm_bindgen(catch)]
+    pub async fn transcribe() -> Result<JsValue, JsValue>;
 }

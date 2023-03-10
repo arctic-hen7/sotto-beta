@@ -2,7 +2,7 @@ version="0.3.2"
 
 [scripts]
 dev.cmd = [
-    "concurrently \"bonnie dev perseus\" \"bonnie dev tauri\""
+    "concurrently \"bonnie dev build-tailwind\" \"bonnie dev perseus\" \"bonnie dev tauri\""
 ]
 dev.subcommands.perseus = [
     # We need to serve as an actual server to get live reloading working (we're tricking Perseus pretty much)
@@ -12,3 +12,12 @@ dev.subcommands.tauri = [
     # This will fetch content from `dist/exported`
     "cargo tauri dev"
 ]
+
+dev.subcommands.build-tailwind.cmd = [
+    "tailwindcss -i ./styles/index.css -c ./tailwind.config.js -o ./static/tailwind.css -w"
+]
+dev.subcommands.build-tailwind.desc = "builds a tailwind stylesheet for development, watching for changes"
+dev.subcommands.build-tailwind.subcommands.prod.cmd = [
+    "NODE_ENV=production tailwindcss -i ./styles/index.css -c ./tailwind.config.js -o ./static/tailwind.css --minify"
+]
+dev.subcommands.build-tailwind.subcommands.prod.desc = "builds a tailwind stylesheet for production (minifying)"
