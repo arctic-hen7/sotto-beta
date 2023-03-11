@@ -8,11 +8,16 @@ mod record;
 use std::sync::Mutex;
 use tauri::State;
 use tokio::sync::oneshot::{channel, Sender};
+use tempfile::NamedTempFile;
 
 fn main() {
     tauri::Builder::default()
         // We'll always start idle
-        .manage(AppState { transcription_state: Mutex::new(TranscriptionState::Idle) })
+        .manage(AppState {
+            transcription_state: Mutex::new(TranscriptionState::Idle),
+            // Failing to create the target would be a critical error
+            record_file: NamedTempFile::new().expect("failed to create temporary file target for recording"),
+        })
         .invoke_handler(tauri::generate_handler![transcribe, record, end_recording])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
@@ -32,6 +37,9 @@ enum TranscriptionState {
 
 struct AppState {
     transcription_state: Mutex<TranscriptionState>,
+    /// The handle to the file used for recording. When this is dropped (i.e. when the app closes), it
+    /// will be automatically dropped by the OS.
+    record_file: NamedTempFile,
 }
 
 #[tauri::command]
@@ -53,8 +61,9 @@ async fn record(state: State<'_, AppState>) -> Result<(), String> {
         }
     };
 
+    let path = state.record_file.path().to_string_lossy().to_string();
     tokio::task::spawn_blocking(move || {
-        crate::record::start_recording("../record.wav", rx)
+        crate::record::start_recording(&path, rx)
     }).await.map_err(|_| String::from("recording thread panicked"))??;
 
     Ok(())
@@ -98,11 +107,13 @@ async fn transcribe(state: State<'_, AppState>) -> Result<String, String> {
         }
     };
 
+    let path = state.record_file.path().to_string_lossy().to_string();
+
     let res: Result<String, PyErr> = Python::with_gil(|py| {
         let py_code = include_str!("transcribe.py");
         // Hilariously, Python won't let us call this `whisper`
         let whisper = PyModule::from_code(py, py_code, "transcribe.py", "transcribe")?;
-        let transcription: String = whisper.getattr("transcribe")?.call1(("../record.wav",))?.extract()?;
+        let transcription: String = whisper.getattr("transcribe")?.call1((&path,))?.extract()?;
 
         Ok(transcription)
     });

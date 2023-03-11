@@ -22,6 +22,7 @@ pyo3 = { version = "0.18", features = [ "auto-initialize" ] }
 hound = "3"
 cpal = "0.15"
 tokio = { version = "1", features = [ "sync" ] }
+tempfile = "3"
 
 [features]
 # by default Tauri runs in production mode
