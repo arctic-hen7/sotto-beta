@@ -1,0 +1,48 @@
+name: Build and Release
+
+on:
+    push:
+        tags:
+            - "v*"
+
+jobs:
+    publish-tauri:
+        permissions:
+            contents: write
+        strategy:
+        fail-fast: false
+        matrix:
+          platform: [macos-latest, ubuntu-20.04, windows-latest]
+
+        runs-on: ${{ matrix.platform }}
+        steps:
+          - uses: actions/checkout@v3
+          - name: setup node
+            uses: actions/setup-node@v3
+            with:
+                node-version: 16
+          - name: Install Rust stable
+            uses: dtolnay/rust-toolchain@stable
+          - name: Install dependencies (ubuntu only)
+            if: matrix.platform == 'ubuntu-20.04'
+            run: |
+                sudo apt-get
+                sudo update apt-get install -y libgtk-3-dev libwebkit2gtk-4.0-dev libappindicator3-dev librsvg2-dev patchelf
+          - name: Install frontend dependencies
+            run: |
+                npm install
+                cargo install bonnie
+                cargo install perseus-cli --version 0.4.0-beta.21
+          - name: Build frontend
+            run: |
+                bonnie dev build-tailwind prod
+                perseus deploy -e
+          - uses: tauri-apps/tauri-action@v0
+            env:
+                GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+                with:
+                    tagName: app-v__VERSION__ # the action automatically replaces \_\_VERSION\_\_ with the app version
+                    releaseName: Sotto v__VERSION__'
+                    releaseBody: 'See the assets to download this version and install.'
+                    releaseDraft: true
+                    prerelease: false
