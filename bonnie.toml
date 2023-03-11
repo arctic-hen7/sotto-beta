@@ -21,3 +21,8 @@ dev.subcommands.build-tailwind.subcommands.prod.cmd = [
     "NODE_ENV=production tailwindcss -i ./styles/index.css -c ./tailwind.config.js -o ./static/tailwind.css --minify"
 ]
 dev.subcommands.build-tailwind.subcommands.prod.desc = "builds a tailwind stylesheet for production (minifying)"
+
+build = [
+    "perseus deploy -e",
+    "cargo tauri build"
+]

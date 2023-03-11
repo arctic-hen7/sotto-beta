@@ -8,4 +8,8 @@ use wasm_bindgen::prelude::*;
 extern "C" {
     #[wasm_bindgen(catch)]
     pub async fn transcribe() -> Result<JsValue, JsValue>;
+    #[wasm_bindgen(catch)]
+    pub async fn record() -> Result<JsValue, JsValue>;
+    #[wasm_bindgen(catch)]
+    pub async fn end_recording() -> Result<JsValue, JsValue>;
 }

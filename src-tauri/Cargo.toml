@@ -19,6 +19,9 @@ serde_json = "1.0"
 serde = { version = "1.0", features = ["derive"] }
 tauri = { version = "1.2.2", features = [] }
 pyo3 = { version = "0.18", features = [ "auto-initialize" ] }
+hound = "3"
+cpal = "0.15"
+tokio = { version = "1", features = [ "sync" ] }
 
 [features]
 # by default Tauri runs in production mode

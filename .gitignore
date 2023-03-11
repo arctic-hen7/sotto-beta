@@ -1,6 +1,6 @@
 dist/
 target/
-whisper.cpp/
+pkg/
 # Just for Tailwind
 node_modules/
 static/tailwind.css

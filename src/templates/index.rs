@@ -37,6 +37,20 @@ fn index_page<G: Html>(cx: Scope, IndexStateRx { text }: &IndexStateRx) -> View<
                 class = "",
                 on:click = move |_| {
                     #[cfg(client)]
+                    record(cx, &transcription_state);
+                }
+            ) { "Record" }
+            button(
+                class = "",
+                on:click = move |_| {
+                    #[cfg(client)]
+                    end_recording(cx, &transcription_state);
+                }
+            ) { "End recording" }
+            button(
+                class = "",
+                on:click = move |_| {
+                    #[cfg(client)]
                     transcribe(cx, &transcription_state);
                 }
             ) { "Transcribe" }
@@ -84,6 +98,46 @@ fn transcribe<'a>(
                     .as_string()
                     .unwrap()
             )),
+            Err(err) => state.set(TranscriptionState::Err(
+                err
+                    .as_string()
+                    .unwrap()
+            )),
+        };
+    });
+}
+/// Instructs Tauri to begin the recording process.
+#[browser_only_fn]
+fn record<'a>(
+    cx: Scope<'a>,
+    state: &'a Signal<TranscriptionState>,
+) {
+    state.set(TranscriptionState::Loading);
+
+    spawn_local_scoped(cx, async move {
+        let res = crate::tauri::record().await;
+        match res {
+            Ok(_) => (),
+            Err(err) => state.set(TranscriptionState::Err(
+                err
+                    .as_string()
+                    .unwrap()
+            )),
+        };
+    });
+}
+/// Instructs Tauri to stop recording audio.
+#[browser_only_fn]
+fn end_recording<'a>(
+    cx: Scope<'a>,
+    state: &'a Signal<TranscriptionState>,
+) {
+    state.set(TranscriptionState::Loading);
+
+    spawn_local_scoped(cx, async move {
+        let res = crate::tauri::end_recording().await;
+        match res {
+            Ok(_) => state.set(TranscriptionState::Ok(String::new())),
             Err(err) => state.set(TranscriptionState::Err(
                 err
                     .as_string()
