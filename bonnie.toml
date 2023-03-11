@@ -26,3 +26,8 @@ build = [
     "perseus deploy -e",
     "cargo tauri build"
 ]
+
+release = [
+    "standard-version --sign --commit-all %%",
+    "git push --follow-tags origin main",
+]
