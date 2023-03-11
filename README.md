@@ -20,7 +20,7 @@ Well, the underlying AI is called *Whisper*, and, in music, we often refer to a 
 
 ## License
 
-This project is licensed under the MIT license, which you can see [here](https://github.com/arcitc-hen7/sotto/blob/main/LICENSE).
+This project is licensed under the MIT license, which you can see [here](https://github.com/arctic-hen7/sotto/blob/main/LICENSE).
 
 **--- The rest of this section does not constitute legal advice, and you should refer to the above license for details! ---**
 
