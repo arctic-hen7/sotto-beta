@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [0.1.0-rc.3](https://github.com/arctic-hen7/sotto/compare/v0.1.0-rc.2...v0.1.0-rc.3) (2023-03-12)
+
+
+### Bug Fixes
+
+* fixed deployment config ([286682a](https://github.com/arctic-hen7/sotto/commit/286682a75aeb50367a769d6c77e7e9263e2fd338))
+
 ## [0.1.0-rc.2](https://github.com/arctic-hen7/sotto/compare/v0.1.0-rc.1...v0.1.0-rc.2) (2023-03-11)
 
 
