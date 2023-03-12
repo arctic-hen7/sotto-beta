@@ -2,6 +2,23 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [0.1.0-rc.10](https://github.com/arctic-hen7/sotto/compare/v0.1.0-rc.9...v0.1.0-rc.10) (2023-03-12)
+
+
+### Features
+
+* added unix packaging system ([d11c765](https://github.com/arctic-hen7/sotto/commit/d11c7655f60698cf70cc4c695858bd8d9b304aef))
+
+
+### Bug Fixes
+
+* fixed layout for error view ([2912de9](https://github.com/arctic-hen7/sotto/commit/2912de9c7d4b24936776d8e8752070b89e4d89bc))
+
+
+### Documentation Changes
+
+* added proper usage instructions ([147a1a2](https://github.com/arctic-hen7/sotto/commit/147a1a240a455cc3c0f6d52c6bc45812fd951267))
+
 ## [0.1.0-rc.9](https://github.com/arctic-hen7/sotto/compare/v0.1.0-rc.8...v0.1.0-rc.9) (2023-03-12)
 
 ## [0.1.0-rc.8](https://github.com/arctic-hen7/sotto/compare/v0.1.0-rc.7...v0.1.0-rc.8) (2023-03-12)
