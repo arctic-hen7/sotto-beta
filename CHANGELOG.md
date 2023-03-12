@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [0.1.0-rc.11](https://github.com/arctic-hen7/sotto/compare/v0.1.0-rc.10...v0.1.0-rc.11) (2023-03-12)
+
+
+### Bug Fixes
+
+* **macos:** added extension module linker args ([82b8a51](https://github.com/arctic-hen7/sotto/commit/82b8a51df1cfa6a25a603d33422277db325969a3))
+
 ## [0.1.0-rc.10](https://github.com/arctic-hen7/sotto/compare/v0.1.0-rc.9...v0.1.0-rc.10) (2023-03-12)
 
 
