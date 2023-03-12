@@ -38,6 +38,10 @@ jobs:
               run: |
                 cargo install bonnie
                 cargo install perseus-cli --version 0.4.0-beta.22
+            - name: Install NPM dependencies
+              run: |
+                npm install -g tailwindcss
+                npm install
 
             - name: Build
               run: bonnie build
