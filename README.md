@@ -12,7 +12,16 @@ So, while the original target audience of this app was the elderly, and those wh
 
 ## Usage
 
-TODO
+*Before using Sotto, please ensure you have `ffmpeg` installed on your computer.*
+
+1. Download the latest version from [the releases page](https://github.com/arctic-hen7/sotto/releases).
+2. Make sure you have Python 3.10 (yes, the minor version matters!). On most systems, this can be trivially installed (e.g. `sudo apt install python3.10` on Debian and Ubuntu).
+3. Extract the downloaded Sotto archive.
+4. Inside that directory, run `bash install.sh` in a terminal. You will be prompted for your password to update the database of desktop applications on your computer.
+
+On Linux, a `.desktop` file will be created for you, and you're done! On macOS, you will need to manually create the app's representation through Automator.
+
+If you're on Windows, you will just have a `.exe` file, with none of these scripts. At this time, we don't support proper packaging for Windows, but we soon will!
 
 ## Where did 'Sotto' come from?
 
