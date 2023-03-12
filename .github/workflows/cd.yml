@@ -10,6 +10,7 @@ jobs:
     usu-build-release:
         runs-on: ${{ matrix.os }}
         strategy:
+            fail-fast: false
             matrix:
                 include:
                     - os: ubuntu-latest
@@ -42,6 +43,11 @@ jobs:
               run: |
                 npm install -g tailwindcss
                 npm install
+            - name: Install dependencies (Ubuntu only)
+              if: matrix.os == 'ubuntu-latest'
+              run: |
+                sudo apt-get update
+                sudo apt-get install -y libgtk-3-dev libwebkit2gtk-4.0-dev libappindicator3-dev librsvg2-dev patchelf
 
             - name: Build
               run: bonnie build
