@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [0.1.0-rc.4](https://github.com/arctic-hen7/sotto/compare/v0.1.0-rc.3...v0.1.0-rc.4) (2023-03-12)
+
+
+### Bug Fixes
+
+* updated to perseus v0.4.0-beta.22 ([a4839b3](https://github.com/arctic-hen7/sotto/commit/a4839b3d566e703de1b5d8d9c062410b85587cad))
+
 ## [0.1.0-rc.3](https://github.com/arctic-hen7/sotto/compare/v0.1.0-rc.2...v0.1.0-rc.3) (2023-03-12)
 
 
