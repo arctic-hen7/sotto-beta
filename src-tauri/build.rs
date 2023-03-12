@@ -1,3 +1,4 @@
 fn main() {
-  tauri_build::build()
+    pyo3_build_config::add_extension_module_link_args();
+    tauri_build::build()
 }
