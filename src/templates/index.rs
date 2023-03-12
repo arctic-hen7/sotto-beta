@@ -77,20 +77,23 @@ fn index_page<G: Html>(cx: Scope, state: &IndexStateRx) -> View<G> {
                 let err = err.to_string();
                 view! {
                     cx,
-                    // Not a button, the user should manually restart the app
-                    div(
-                        class = "relative flex justify-center items-center rounded-full h-96 w-96 text-red-700"
-                    ) {
-                        span(class = "absolute bg-red-700 h-full w-full rounded-full") {}
-                        svg(class = "absolute fill-white", xmlns = "http://www.w3.org/2000/svg", viewBox = "0 0 100 100", width = "70%", height = "70%") {
-                            rect(x = "42.5", y = "15", width = "15", height = "45", fill = "white") {}
-                            circle(cx = "50", cy = "80", r = "10", fill = "white") {}
+                    div(class = "flex flex-col justify-center align-items") {
+                        // Not a button, the user should manually restart the app
+                        div(
+                            class = "relative flex justify-center items-center rounded-full h-96 w-96 text-red-700"
+                        ) {
+                            span(class = "absolute bg-red-700 h-full w-full rounded-full") {}
+                            svg(class = "absolute fill-white", xmlns = "http://www.w3.org/2000/svg", viewBox = "0 0 100 100", width = "70%", height = "70%") {
+                                rect(x = "42.5", y = "15", width = "15", height = "45", fill = "white") {}
+                                circle(cx = "50", cy = "80", r = "10", fill = "white") {}
+                            }
+                        }
+                        p(class = "text-xl max-w-sm text-center text-red-800 mt-4") { "An error has occurred. Please take a photo of this error so we can understand it better, and then restart the app. Make sure to copy any transcribed text first!" }
+                        div(class = "bg-red-400 rounded-lg max-w-md text-white p-6 text-lg mt-4") {
+                            p(class = "break-words") { (format!("Error: '{}'", err)) }
                         }
                     }
-                    p(class = "text-xl max-w-prose text-center text-red-800") { "An error has occurred. Please take a photo of this error so we can understand it better, and then restart the app. Make sure to copy any transcribed text first!" }
-                    div(class = "bg-red-400 rounded-lg max-w-md text-white p-6 text-lg mt-4") {
-                        p(class = "break-words") { (format!("Error: '{}'", err)) }
-                    }
+
                 }
             }
         }
@@ -191,10 +194,7 @@ impl IndexStateRx {
     }
     /// Instructs Tauri to begin the transcription process with whatever audio has been recorded.
     /// This manages state and asynchronicity on its own.
-    fn transcribe<'a>(
-        &'a self,
-        cx: Scope<'a>,
-    ) {
+    fn transcribe<'a>(&'a self, cx: Scope<'a>) {
         self.state.set(SottoState::Transcribing);
 
         // Start a separate asynchronous process that will feed back into the state when it's done
@@ -208,20 +208,13 @@ impl IndexStateRx {
                     let transcription = transcription.as_string().unwrap();
                     self.extend_transcription(cx, transcription);
                     self.state.set(SottoState::Ready);
-                },
-                Err(err) => self.state.set(SottoState::Err(
-                    err
-                        .as_string()
-                        .unwrap()
-                )),
+                }
+                Err(err) => self.state.set(SottoState::Err(err.as_string().unwrap())),
             };
         });
     }
     /// Instructs Tauri to begin the recording process.
-    fn record<'a>(
-        &'a self,
-        cx: Scope<'a>,
-    ) {
+    fn record<'a>(&'a self, cx: Scope<'a>) {
         self.state.set(SottoState::Recording);
 
         // IMPORTANT: The Tauri function that begins the recording spawns a blocking thread that waits for
@@ -233,29 +226,18 @@ impl IndexStateRx {
             let res = crate::tauri::record().await;
             match res {
                 Ok(_) => (),
-                Err(err) => self.state.set(SottoState::Err(
-                    err
-                        .as_string()
-                        .unwrap()
-                )),
+                Err(err) => self.state.set(SottoState::Err(err.as_string().unwrap())),
             };
         });
     }
     /// Instructs Tauri to stop recording audio.
-    fn end_recording<'a>(
-        &'a self,
-        cx: Scope<'a>,
-    ) {
+    fn end_recording<'a>(&'a self, cx: Scope<'a>) {
         // This will resolve instantly, but Tauri does everything asynchronously, so we still need it
         spawn_local_scoped(cx, async move {
             let res = crate::tauri::end_recording().await;
             match res {
                 Ok(_) => self.state.set(SottoState::Recorded),
-                Err(err) => self.state.set(SottoState::Err(
-                    err
-                        .as_string()
-                        .unwrap()
-                )),
+                Err(err) => self.state.set(SottoState::Err(err.as_string().unwrap())),
             };
         });
     }
