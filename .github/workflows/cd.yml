@@ -6,43 +6,46 @@ on:
             - "v*"
 
 jobs:
-    publish-tauri:
-        permissions:
-            contents: write
+    # This builds and releases for Windows, MacOS, and Linux
+    usu-build-release:
+        runs-on: ${{ matrix.os }}
         strategy:
-            fail-fast: false
             matrix:
-                platform: [macos-latest, ubuntu-20.04, windows-latest]
-
-        runs-on: ${{ matrix.platform }}
+                include:
+                    - os: ubuntu-latest
+                      artifact_name: sotto
+                      asset_name: sotto-linux-amd64
+                    - os: macos-latest
+                      artifact_name: sotto
+                      asset_name: sotto-macos-amd64
+                    - os: windows-latest
+                      artifact_name: sotto.exe
+                      asset_name: sotto-windows-amd64
         steps:
-          - uses: actions/checkout@v3
-          - name: setup node
-            uses: actions/setup-node@v3
-            with:
-                node-version: 16
-          - name: Install Rust stable
-            uses: dtolnay/rust-toolchain@stable
-          - name: Install dependencies (ubuntu only)
-            if: matrix.platform == 'ubuntu-20.04'
-            run: |
-                sudo apt-get
-                sudo update apt-get install -y libgtk-3-dev libwebkit2gtk-4.0-dev libappindicator3-dev librsvg2-dev patchelf
-          - name: Install frontend dependencies
-            run: |
-                npm install
+            - uses: actions/checkout@v2
+
+            # Cache Cargo binaries
+            - uses: actions/cache@v3
+              id: cache
+              with:
+                path: |
+                  ~/.cargo/bin/
+                # The cache should be OS-specific
+                key: ${{ runner.os }}-cargo-bins
+            # Only install the binaries if the cache doesn't have them
+            - name: Install Dependencies
+              if: steps.cache.outputs.cache-hit != 'true'
+              run: |
                 cargo install bonnie
                 cargo install perseus-cli --version 0.4.0-beta.21
-          - name: Build frontend
-            run: |
-                bonnie dev build-tailwind prod
-                perseus deploy -e
-          - uses: tauri-apps/tauri-action@v0
-            env:
-                GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-                with:
-                    tagName: app-v__VERSION__ # the action automatically replaces \_\_VERSION\_\_ with the app version
-                    releaseName: Sotto v__VERSION__'
-                    releaseBody: 'See the assets to download this version and install.'
-                    releaseDraft: true
-                    prerelease: false
+
+            - name: Build
+              run: bonnie build
+            - name: Release binary
+              uses: svenstaro/upload-release-action@v2
+              with:
+                  repo_token: ${{ secrets.GITHUB_TOKEN }}
+                  file: target/release/${{ matrix.artifact_name }}
+                  asset_name: ${{ matrix.asset_name }}
+                  tag: ${{ github.ref }}
+                  body: "The below binaries/executables are for the Sotto app. See [CHANGELOG.md](./CHANGELOG.md) for details of the changes in this version."
