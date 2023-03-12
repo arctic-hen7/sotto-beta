@@ -51,11 +51,32 @@ jobs:
 
             - name: Build
               run: bonnie build
+
+            # Linux and MacOS get a proper packaging system, Windows is not yet supported properly (they just get a `.exe` file)
+            - name: Package everything (Linux and MacOS)
+              if: matrix.os != 'windows-latest'
+              run: |
+                # Collate all the scripts we need
+                mkdir sotto-release
+                cp scripts/run-sotto.sh sotto-release/sotto
+                cp scripts/unix-install.sh sotto-release/install.sh
+                cp scripts/unix-desktop.desktop sotto-release/unix-desktop.desktop
+                # And grab the actual release artifact
+                mv src-tauri/target/release/${{ matrix.artifact_name }} sotto-release/sotto-app
+                # Then turn it all into an archive
+                tar -czf ${{ matrix.artifact_name }} sotto-release/
+            # TODO
+            - name: Package everything (Windows)
+              if: matrix.os == 'windows-latest'
+              run: |
+                # This is for compatibility with the other OSes right now, we don't have a Windows packaging system
+                mv src-tauri/target/release/${{ matrix.artifact_name }} ${{ matrix.artifact_name }}
             - name: Release binary
               uses: svenstaro/upload-release-action@v2
               with:
                   repo_token: ${{ secrets.GITHUB_TOKEN }}
-                  file: src-tauri/target/release/${{ matrix.artifact_name }}
+                  # This is the archive we created
+                  file: ${{ matrix.artifact_name }}
                   asset_name: ${{ matrix.asset_name }}
                   tag: ${{ github.ref }}
                   body: "The below binaries/executables are for the Sotto app. See [CHANGELOG.md](./CHANGELOG.md) for details of the changes in this version."

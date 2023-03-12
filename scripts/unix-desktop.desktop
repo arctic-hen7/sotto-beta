@@ -1,0 +1,9 @@
+[Desktop Entry]
+Encoding=UTF-8
+Version=1.0
+Type=Application
+Name=Sotto
+Comment=A speech-to-text app that just works.
+Exec=sh -c "$HOME/.sotto/sotto"
+Terminal=false
+Categories=Utility;Application;
