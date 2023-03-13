@@ -101,11 +101,10 @@ fn index_page<G: Html>(cx: Scope, state: &IndexStateRx) -> View<G> {
 
     view! { cx,
         div(class = "w-full h-screen flex flex-col justify-center items-center") {
-
             div(class = "flex flex-row justify-center items-center w-full") {
                 (*button_view.get())
                 textarea(
-                    class = "p-4 mx-4 border border-black text-2xl h-96 w-1/2 resize",
+                    class = "p-4 mx-4 border border-black text-4xl h-96 w-1/2 resize",
                     bind:value = state.text,
                     placeholder = "Try recording some audio, and, when it's been transcribed, the text will appear here!"
                 ) {}
