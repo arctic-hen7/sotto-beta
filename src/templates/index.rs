@@ -30,6 +30,8 @@ fn index_page<G: Html>(cx: Scope, state: &IndexStateRx) -> View<G> {
                     on:click = move |_| {
                         #[cfg(client)]
                         state.end_recording(cx);
+                        #[cfg(client)]
+                        state.transcribe(cx);
                     },
                     class = "relative flex justify-center items-center rounded-full h-96 w-96 text-red-400"
                 ) {
@@ -42,22 +44,22 @@ fn index_page<G: Html>(cx: Scope, state: &IndexStateRx) -> View<G> {
                     }
                 }
             },
-            // Button to begin transcription
-            SottoState::Recorded => view! {
-                cx,
-                button(
-                    on:click = move |_| {
-                        #[cfg(client)]
-                        state.transcribe(cx);
-                    },
-                    class = "relative flex justify-center items-center rounded-full h-96 w-96 text-emerald-400 group"
-                ) {
-                    span(class = "absolute bg-emerald-400 h-[93%] w-[93%] rounded-full group-hover:h-full group-hover:w-full transition-all") {}
-                    svg(class = "absolute fill-white", xmlns = "http://www.w3.org/2000/svg", viewBox = "0 0 100 100", width = "70%", height = "70%") {
-                        path(d = "M25 10 L85 50 L25 90 Z", fill = "white") {}
-                    }
-                }
-            },
+            // // Button to begin transcription
+            // SottoState::Recorded => view! {
+            //     cx,
+            //     button(
+            //         on:click = move |_| {
+            //             #[cfg(client)]
+            //             state.transcribe(cx);
+            //         },
+            //         class = "relative flex justify-center items-center rounded-full h-96 w-96 text-emerald-400 group"
+            //     ) {
+            //         span(class = "absolute bg-emerald-400 h-[93%] w-[93%] rounded-full group-hover:h-full group-hover:w-full transition-all") {}
+            //         svg(class = "absolute fill-white", xmlns = "http://www.w3.org/2000/svg", viewBox = "0 0 100 100", width = "70%", height = "70%") {
+            //             path(d = "M25 10 L85 50 L25 90 Z", fill = "white") {}
+            //         }
+            //     }
+            // },
             // Transcription indicator
             SottoState::Transcribing => view! {
                 cx,
@@ -161,8 +163,8 @@ struct IndexState {
 enum SottoState {
     /// We're actively recording, and are ready to stop recording at any moment.
     Recording,
-    /// We've recorded some speech, and we're ready to transcribe it.
-    Recorded,
+    // /// We've recorded some speech, and we're ready to transcribe it.
+    // Recorded,
     /// We're transcribing some text, and waiting for Whisper to finish.
     Transcribing,
     /// An error occurred somewhere in our interactions with Tauri, which should be displayed
@@ -235,7 +237,7 @@ impl IndexStateRx {
         spawn_local_scoped(cx, async move {
             let res = crate::tauri::end_recording().await;
             match res {
-                Ok(_) => self.state.set(SottoState::Recorded),
+                Ok(_) => self.state.set(SottoState::Transcribing),
                 Err(err) => self.state.set(SottoState::Err(err.as_string().unwrap())),
             };
         });
