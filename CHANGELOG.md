@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [0.1.0-rc.12](https://github.com/arctic-hen7/sotto/compare/v0.1.0-rc.11...v0.1.0-rc.12) (2023-03-13)
+
+
+### Features
+
+* added preliminary support for statically linking python ([47684da](https://github.com/arctic-hen7/sotto/commit/47684da3aa8ebce60c4a2a079f6e9a0c700b3a2a))
+* amalgamated end recording and begin transcription buttons ([c2df14e](https://github.com/arctic-hen7/sotto/commit/c2df14e7f6746f2b916dd16206fec26e5f5cd5df))
+
+
+### Bug Fixes
+
+* increased font size of textbox ([e8258d0](https://github.com/arctic-hen7/sotto/commit/e8258d0e1f2c64ec65c77ff172cdc2389b240662))
+
 ## [0.1.0-rc.11](https://github.com/arctic-hen7/sotto/compare/v0.1.0-rc.10...v0.1.0-rc.11) (2023-03-12)
 
 
