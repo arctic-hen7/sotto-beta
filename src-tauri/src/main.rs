@@ -5,18 +5,71 @@
 
 mod record;
 
-use std::sync::Mutex;
+use std::sync::{Arc, Mutex, mpsc};
 use tauri::State;
-use tokio::sync::oneshot::{channel, Sender};
+use tokio::sync::oneshot;
 use tempfile::NamedTempFile;
 
 fn main() {
+    // Failing to establish this would be a critical error
+    let record_file = NamedTempFile::new().expect("failed to create temporary file target for recording");
+
+    let (transcription_action_tx, transcription_action_rx) = mpsc::channel();
+    let (transcription_tx, transcription_rx) = mpsc::channel();
+
+    // We need to start a separate thread for the transcription process, which must hold
+    // the global embedded Python interpreter lock. This interpreter can't be re-initialised,
+    // so we have to hold it in a separate slave thread.
+    let record_file_path = record_file.path().to_string_lossy().to_string();
+    let handle = std::thread::spawn(move || {
+        use pyo3::prelude::*;
+
+        let action_rx = transcription_action_rx;
+        let result_tx = transcription_tx;
+
+        // SAFETY: The global Python interpreter cannot be invoked more than once,
+        // so we consign it to a separate thread with message-passing.
+        unsafe {
+            pyo3::with_embedded_python_interpreter(|py| {
+                let py_code = include_str!("transcribe.py");
+                // Hilariously, Python won't let us call this `whisper`.
+                // If this panics, the app will fail immediately before it can be opened,
+                // preventing the user from recording anything that they might then lose.
+                // (Aka. we're calling this a feature!)
+                let whisper = PyModule::from_code(py, py_code, "transcribe.py", "transcribe")
+                    .expect("failed to instantiate whisper submodule");
+                while action_rx.recv().is_ok() {
+                    // We've received a new instruction to transcribe the latest recording
+                    // We use a closure here to make using `?` easy
+                    let transcription_res: Result<String, String> = (|| {
+                        let transcription = whisper
+                            .getattr("transcribe")
+                            .map_err(|err| err.to_string())?
+                            .call1((&record_file_path,))
+                            .map_err(|err| err.to_string())?
+                            .extract()
+                            .map_err(|err| err.to_string())?;
+                        Ok(transcription)
+                    })();
+                    // The receiver is maintained by the global state, so if this fails, the app has been closed
+                    let _ = result_tx.send(transcription_res);
+                }
+            });
+        }
+    });
+    // Check if there was a panic (this is long-running, so there has to have been if it's done)
+    std::thread::sleep(std::time::Duration::from_secs(3));
+    if handle.is_finished() {
+        panic!("underlying whisper thread failed to instantiate: static linking has likely failed (please report this as a bug)");
+    }
+
     tauri::Builder::default()
         // We'll always start idle
         .manage(AppState {
             transcription_state: Mutex::new(TranscriptionState::Idle),
-            // Failing to create the target would be a critical error
-            record_file: NamedTempFile::new().expect("failed to create temporary file target for recording"),
+            record_file,
+            transcribe_tx: Mutex::new(transcription_action_tx),
+            transcribe_rx: Arc::new(Mutex::new(transcription_rx)),
         })
         .invoke_handler(tauri::generate_handler![transcribe, record, end_recording])
         .run(tauri::generate_context!())
@@ -26,7 +79,7 @@ fn main() {
 /// The current operation in the transcription cycle.
 enum TranscriptionState {
     /// We're actively recording new audio.
-    Recording(Sender<()>),
+    Recording(oneshot::Sender<()>),
     /// We're actively transcribing recorded audio.
     Transcribing,
     /// There is audio that has been recorded, but not yet transcribed.
@@ -40,6 +93,12 @@ struct AppState {
     /// The handle to the file used for recording. When this is dropped (i.e. when the app closes), it
     /// will be automatically dropped by the OS.
     record_file: NamedTempFile,
+    /// We need a separate thread for transcription so we can hold the embedded Python
+    /// interpreter lock: this sender will indicate when that thread should start transcribing.
+    transcribe_tx: Mutex<mpsc::Sender<()>>,
+    /// A receiver for the output of the transcription thread. This is a *separate*
+    /// tranceiver pair from the
+    transcribe_rx: Arc<Mutex<mpsc::Receiver<Result<String, String>>>>,
 }
 
 #[tauri::command]
@@ -53,7 +112,7 @@ async fn record(state: State<'_, AppState>) -> Result<(), String> {
             TranscriptionState::Idle | TranscriptionState::Recorded => {
                 // We have recorded audio that we can work with
                 // Create a new oneshot channel for recording
-                let (tx, rx) = channel::<()>();
+                let (tx, rx) = oneshot::channel::<()>();
                 // The sender will be needed to stop the recording later
                 *transcription_state = TranscriptionState::Recording(tx);
                 rx
@@ -94,8 +153,7 @@ async fn end_recording(state: State<'_, AppState>) -> Result<(), String> {
 
 #[tauri::command]
 async fn transcribe(state: State<'_, AppState>) -> Result<String, String> {
-    use pyo3::{Python, PyErr, types::PyModule};
-
+    // Assess the transcription lock, dropping it afterward (before an asynchronous wait on the transcription thread)
     let mut transcription_state = state.transcription_state.lock().unwrap();
     match &*transcription_state {
         TranscriptionState::Idle => return Err("no audio recorded yet".to_string()),
@@ -107,22 +165,21 @@ async fn transcribe(state: State<'_, AppState>) -> Result<String, String> {
         }
     };
 
-    let path = state.record_file.path().to_string_lossy().to_string();
+    // Instruct the transcription thread to transcribe (the thread musut be responsive at this stage)
+    state.transcribe_tx.lock().unwrap().send(())
+        .map_err(|_| "transcription thread unresponsive, please restart the app".to_string())?;
 
-    let res: Result<String, PyErr> = Python::with_gil(|py| {
-        let py_code = include_str!("transcribe.py");
-        // Hilariously, Python won't let us call this `whisper`
-        let whisper = PyModule::from_code(py, py_code, "transcribe.py", "transcribe")?;
-        let transcription: String = whisper.getattr("transcribe")?.call1((&path,))?.extract()?;
-
-        Ok(transcription)
-    });
+    // And wait for its response
+    let res = state.transcribe_rx.lock().unwrap().recv();
     let res = match res {
-        Ok(msg) => Ok(msg),
-        Err(err) => Err(err.to_string()),
+        Ok(Ok(msg)) => Ok(msg),
+        Ok(Err(err)) => Err(err.to_string()),
+        // The transcription thread should not close until the whole app does
+        Err(_) => Err("transcription thread closed prematurely, please restart the app".to_string()),
     };
     // Release the transcription lock
     *transcription_state = TranscriptionState::Idle;
 
     res
+
 }

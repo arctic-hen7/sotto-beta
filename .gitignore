@@ -4,5 +4,6 @@ pkg/
 # Just for Tailwind
 node_modules/
 static/tailwind.css
+pyembedded/
 
 *.wav
