@@ -4,6 +4,7 @@
 )]
 
 mod record;
+mod transcribe;
 
 use std::sync::{Arc, Mutex, mpsc};
 use tauri::State;
@@ -22,40 +23,44 @@ fn main() {
     // so we have to hold it in a separate slave thread.
     let record_file_path = record_file.path().to_string_lossy().to_string();
     let handle = std::thread::spawn(move || {
-        use pyo3::prelude::*;
-
         let action_rx = transcription_action_rx;
         let result_tx = transcription_tx;
 
-        // SAFETY: The global Python interpreter cannot be invoked more than once,
-        // so we consign it to a separate thread with message-passing.
-        unsafe {
-            pyo3::with_embedded_python_interpreter(|py| {
-                let py_code = include_str!("transcribe.py");
-                // Hilariously, Python won't let us call this `whisper`.
-                // If this panics, the app will fail immediately before it can be opened,
-                // preventing the user from recording anything that they might then lose.
-                // (Aka. we're calling this a feature!)
-                let whisper = PyModule::from_code(py, py_code, "transcribe.py", "transcribe")
-                    .expect("failed to instantiate whisper submodule");
-                while action_rx.recv().is_ok() {
-                    // We've received a new instruction to transcribe the latest recording
-                    // We use a closure here to make using `?` easy
-                    let transcription_res: Result<String, String> = (|| {
-                        let transcription = whisper
-                            .getattr("transcribe")
-                            .map_err(|err| err.to_string())?
-                            .call1((&record_file_path,))
-                            .map_err(|err| err.to_string())?
-                            .extract()
-                            .map_err(|err| err.to_string())?;
-                        Ok(transcription)
-                    })();
-                    // The receiver is maintained by the global state, so if this fails, the app has been closed
-                    let _ = result_tx.send(transcription_res);
-                }
-            });
+        while action_rx.recv().is_ok() {
+            let transcription_res = transcribe::transcribe(&record_file_path);
+            // The receiver is maintained by the global state, so if this fails, the app has been closed
+            let _ = result_tx.send(transcription_res);
         }
+
+        // // SAFETY: The global Python interpreter cannot be invoked more than once,
+        // // so we consign it to a separate thread with message-passing.
+        // unsafe {
+        //     pyo3::with_embedded_python_interpreter(|py| {
+        //         let py_code = include_str!("transcribe.py");
+        //         // Hilariously, Python won't let us call this `whisper`.
+        //         // If this panics, the app will fail immediately before it can be opened,
+        //         // preventing the user from recording anything that they might then lose.
+        //         // (Aka. we're calling this a feature!)
+        //         let whisper = PyModule::from_code(py, py_code, "transcribe.py", "transcribe")
+        //             .expect("failed to instantiate whisper submodule");
+        //         while action_rx.recv().is_ok() {
+        //             // We've received a new instruction to transcribe the latest recording
+        //             // We use a closure here to make using `?` easy
+        //             let transcription_res: Result<String, String> = (|| {
+        //                 let transcription = whisper
+        //                     .getattr("transcribe")
+        //                     .map_err(|err| err.to_string())?
+        //                     .call1((&record_file_path,))
+        //                     .map_err(|err| err.to_string())?
+        //                     .extract()
+        //                     .map_err(|err| err.to_string())?;
+        //                 Ok(transcription)
+        //             })();
+        //             // The receiver is maintained by the global state, so if this fails, the app has been closed
+        //             let _ = result_tx.send(transcription_res);
+        //         }
+        //     });
+        // }
     });
     // Check if there was a panic (this is long-running, so there has to have been if it's done)
     std::thread::sleep(std::time::Duration::from_secs(3));
@@ -165,7 +170,7 @@ async fn transcribe(state: State<'_, AppState>) -> Result<String, String> {
         }
     };
 
-    // Instruct the transcription thread to transcribe (the thread musut be responsive at this stage)
+    // Instruct the transcription thread to transcribe (the thread must be responsive at this stage)
     state.transcribe_tx.lock().unwrap().send(())
         .map_err(|_| "transcription thread unresponsive, please restart the app".to_string())?;
 
