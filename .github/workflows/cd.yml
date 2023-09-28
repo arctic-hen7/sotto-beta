@@ -38,7 +38,7 @@ jobs:
               if: steps.cache.outputs.cache-hit != 'true'
               run: |
                 cargo install bonnie tauri-cli
-                cargo install perseus-cli --version 0.4.0-beta.22
+                cargo install perseus-cli
             - name: Install NPM dependencies
               run: |
                 npm install -g tailwindcss
