@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [0.1.0-rc.13](/home/arctic-hen7/me/.main-mirror.git/compare/v0.1.0-rc.12...v0.1.0-rc.13) (2023-09-28)
+
+
+### Features
+
+* switched to pure rust for whisper ([940046a](/home/arctic-hen7/me/.main-mirror.git/commit/940046a89d09c44c6abe6695fb235dd6ce364584))
+
+
+### Code Refactorings
+
+* cleaned everything up ([8c04b3c](/home/arctic-hen7/me/.main-mirror.git/commit/8c04b3c8bd582daa959798d65be919dc7bddc125))
+
 ## [0.1.0-rc.12](https://github.com/arctic-hen7/sotto/compare/v0.1.0-rc.11...v0.1.0-rc.12) (2023-03-13)
 
 
