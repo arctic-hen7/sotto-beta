@@ -7,9 +7,7 @@ use wasm_bindgen::prelude::*;
 #[wasm_bindgen(module = "/src/tauri_glue.js")]
 extern "C" {
     #[wasm_bindgen(catch)]
-    pub async fn transcribe() -> Result<JsValue, JsValue>;
-    #[wasm_bindgen(catch)]
-    pub async fn record() -> Result<JsValue, JsValue>;
+    pub async fn dictate() -> Result<JsValue, JsValue>;
     #[wasm_bindgen(catch)]
     pub async fn end_recording() -> Result<JsValue, JsValue>;
 }

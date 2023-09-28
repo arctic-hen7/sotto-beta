@@ -1,7 +1,12 @@
-use cpal::{StreamConfig, traits::{DeviceTrait, HostTrait, StreamTrait}};
+use crate::errors::Error;
+use cpal::{
+    traits::{DeviceTrait, HostTrait, StreamTrait},
+    StreamConfig,
+};
+use std::path::Path;
 use tokio::sync::oneshot::Receiver;
 
-pub fn start_recording(path: &str, rx: Receiver<()>) -> Result<(), String> {
+pub fn start_recording(path: &Path, rx: Receiver<()>) -> Result<(), Error> {
     let host = cpal::default_host();
     let input_device = host.default_input_device().expect("TODO");
     let dflt_config = input_device.default_input_config().expect("TODO");
@@ -22,22 +27,24 @@ pub fn start_recording(path: &str, rx: Receiver<()>) -> Result<(), String> {
     let mut writer = hound::WavWriter::create(path, spec).expect("TODO");
 
     // Initialize the CPAL audio input stream
-    let input_stream = input_device.build_input_stream(
-        &config,
-        move |data: &[f32], _| {
-            // Callback function to receive audio data
-            for sample in data {
-                if let Err(err) = writer.write_sample(*sample) {
-                    eprintln!("Error writing audio data to WAV file: {err:?}");
+    let input_stream = input_device
+        .build_input_stream(
+            &config,
+            move |data: &[f32], _| {
+                // Callback function to receive audio data
+                for sample in data {
+                    if let Err(err) = writer.write_sample(*sample) {
+                        eprintln!("Error writing audio data to WAV file: {err:?}");
+                    }
                 }
-            }
-        },
-        |err| {
-            // Error callback
-            eprintln!("Error in audio stream: {:?}", err);
-        },
-        None,
-    ).expect("TODO");
+            },
+            |err| {
+                // Error callback
+                eprintln!("Error in audio stream: {:?}", err);
+            },
+            None,
+        )
+        .expect("TODO");
 
     // Start the audio stream
     input_stream.play().expect("TODO");

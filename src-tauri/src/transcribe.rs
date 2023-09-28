@@ -1,11 +1,12 @@
+use crate::errors::Error;
 use hound::WavReader;
+use std::path::Path;
 use whisper_rs::{FullParams, SamplingStrategy, WhisperContext};
 
 /// Transcribes the audio in the given file to a string of text.
-pub fn transcribe(filename: &str) -> Result<String, String> {
+pub fn transcribe(file: &Path) -> Result<String, Error> {
     // Load a context and model.
-    let ctx = WhisperContext::new("models/ggml-base.en.bin")
-        .expect("failed to load model");
+    let ctx = WhisperContext::new("models/ggml-base.en.bin").expect("failed to load model");
     // Create a state
     let mut state = ctx.create_state().expect("failed to create key");
 
@@ -18,14 +19,14 @@ pub fn transcribe(filename: &str) -> Result<String, String> {
     params.set_n_threads(4); // TODO
     params.set_translate(false);
     params.set_language(Some("en")); // TODO
-    // Disable anything that prints to stdout.
+                                     // Disable anything that prints to stdout.
     params.set_print_special(false);
     params.set_print_progress(false);
     params.set_print_realtime(false);
     params.set_print_timestamps(false);
 
     // Open the audio file (we've already guaranteed that this is mono f32 audio in 16kHz)
-    let mut reader = WavReader::open(filename).expect("failed to open file");
+    let mut reader = WavReader::open(file).expect("failed to open file");
     let audio = reader
         .samples::<f32>()
         .map(|s| s.expect("TODO"))
