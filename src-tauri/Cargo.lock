@@ -66,6 +66,7 @@ version = "0.1.0"
 dependencies = [
  "cpal",
  "hound",
+ "num_cpus",
  "serde",
  "serde_json",
  "tauri",

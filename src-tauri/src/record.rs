@@ -8,8 +8,10 @@ use tokio::sync::oneshot::Receiver;
 
 pub fn start_recording(path: &Path, rx: Receiver<()>) -> Result<(), Error> {
     let host = cpal::default_host();
-    let input_device = host.default_input_device().expect("TODO");
-    let dflt_config = input_device.default_input_config().expect("TODO");
+    let input_device = host.default_input_device().ok_or(Error::NoInputDevice)?;
+    let dflt_config = input_device
+        .default_input_config()
+        .map_err(|err| Error::GetDefaultInputConfigFailed { source: err })?;
 
     // Initialize the WAV writer
     let spec = hound::WavSpec {
@@ -24,7 +26,8 @@ pub fn start_recording(path: &Path, rx: Receiver<()>) -> Result<(), Error> {
         buffer_size: cpal::BufferSize::Default,
     };
 
-    let mut writer = hound::WavWriter::create(path, spec).expect("TODO");
+    let mut writer = hound::WavWriter::create(path, spec)
+        .map_err(|err| Error::CreateWavWriterFailed { source: err })?;
 
     // Initialize the CPAL audio input stream
     let input_stream = input_device
@@ -44,12 +47,16 @@ pub fn start_recording(path: &Path, rx: Receiver<()>) -> Result<(), Error> {
             },
             None,
         )
-        .expect("TODO");
+        .map_err(|err| Error::BuildInputStreamFailed { source: err })?;
 
     // Start the audio stream
-    input_stream.play().expect("TODO");
+    input_stream
+        .play()
+        .map_err(|err| Error::StartStreamFailed { source: err })?;
 
-    // Wait for a signal from the receiver to stop recording
+    // Wait for a signal from the receiver to stop recording.
+    // If this fails, that just implies the app has started to terminate, and we should halt
+    // anyway.
     let _ = rx.blocking_recv();
 
     // Stop and close the audio stream

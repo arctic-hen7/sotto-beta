@@ -16,7 +16,8 @@ fn main() {
         .manage(AppState::default())
         .invoke_handler(tauri::generate_handler![dictate, end_recording])
         .run(tauri::generate_context!())
-        .expect("error while running tauri application");
+        // Critical error, we definitionally can't proceed
+        .expect("failed to start tauri application");
 }
 
 // We abstract away the hybrid sync/async dynamics of the underlying dictation mechanism
@@ -25,10 +26,10 @@ fn main() {
 // always work)
 #[tauri::command]
 async fn dictate(state: State<'_, AppState>) -> Result<String, String> {
-    let task_fut = state.dictate().map_err(|e| e.to_string())?;
-    task_fut.await.map_err(|e| e.to_string())
+    let task_fut = state.dictate().map_err(|e| format!("{e:?}"))?;
+    task_fut.await.map_err(|e| format!("{e:?}"))
 }
 #[tauri::command]
 async fn end_recording(state: State<'_, AppState>) -> Result<(), String> {
-    state.end_recording().await.map_err(|e| e.to_string())
+    state.end_recording().await.map_err(|e| format!("{e:?}"))
 }

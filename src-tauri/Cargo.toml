@@ -24,6 +24,7 @@ tokio = { version = "1", features = [ "sync" ] }
 tempfile = "3"
 whisper-rs = "0.8"
 thiserror = "1"
+num_cpus = "1"
 
 [features]
 # by default Tauri runs in production mode
