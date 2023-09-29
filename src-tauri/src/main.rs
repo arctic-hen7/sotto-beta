@@ -5,6 +5,7 @@
 
 mod dictate;
 mod errors;
+mod model;
 mod record;
 mod transcribe;
 

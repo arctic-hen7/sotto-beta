@@ -22,6 +22,8 @@ dev.subcommands.build-tailwind.subcommands.prod.cmd = [
 ]
 dev.subcommands.build-tailwind.subcommands.prod.desc = "builds a tailwind stylesheet for production (minifying)"
 
+count = "tokei --exclude package-lock.json"
+
 build = [
     "bonnie dev build-tailwind prod",
     "perseus deploy -e",

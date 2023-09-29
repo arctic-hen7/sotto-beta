@@ -1,4 +1,5 @@
 use crate::errors::Error;
+use crate::model::Model;
 use std::future::Future;
 use std::sync::{Arc, Mutex};
 use tempfile::NamedTempFile;
@@ -40,7 +41,10 @@ impl AppState {
                 // to actually access the underlying sender (Rust's ownership system enforces this!).
 
                 // We're now ready to transcribe
-                let result = crate::transcribe::transcribe(&path.path())?;
+                let transcription_model = futures::executor::block_on(async {
+                    Model::WhisperBase.get_or_download().await
+                })?;
+                let result = crate::transcribe::transcribe(&path.path(), &transcription_model)?;
                 // Update the state so we're ready to finish up
                 // TODO Poisoning doesn't matter (and really should be impossible...)
                 *dictation_sender.lock().unwrap() = DictationState::None;
