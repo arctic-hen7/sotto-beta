@@ -10,11 +10,19 @@ mod record;
 mod transcribe;
 
 use crate::dictate::AppState;
+use crate::model::Model;
 use tauri::State;
 
-fn main() {
+#[tokio::main]
+async fn main() {
+    // TODO Don't panic, show an error page inside Sotto
+    // We should lazily instantiate the model so Sotto can show a loading bar
+    let state = AppState::new(Model::WhisperBase)
+        .await
+        .expect("failed to instantate sotto");
+
     tauri::Builder::default()
-        .manage(AppState::default())
+        .manage(state)
         .invoke_handler(tauri::generate_handler![dictate, end_recording])
         .run(tauri::generate_context!())
         // Critical error, we definitionally can't proceed

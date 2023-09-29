@@ -4,16 +4,35 @@ use std::future::Future;
 use std::sync::{Arc, Mutex};
 use tempfile::NamedTempFile;
 use tokio::sync::oneshot;
+use whisper_rs::WhisperContext;
 
 /// The app's state on the backend.
-#[derive(Default)]
 pub struct AppState {
     /// A sender that can be used to terminate the dictation process if it's
     /// ongoing. Note that this might still be `Some(_)` if recording has been
     /// completed, but if transcription is still ongoing.
     dictation: Arc<Mutex<DictationState>>,
+    /// The Whisper context, cached for all uses. A new state will be created for
+    /// each use.
+    ///
+    /// This will be maintained for the lifetime of the app.
+    whisper_ctx: &'static WhisperContext,
 }
 impl AppState {
+    /// Creates a new [`AppState`] using the given model as the default for all transcriptions.
+    /// This model will be loaded and cached immediately.
+    pub async fn new(dflt_model: Model) -> Result<Self, Error> {
+        let model_path = dflt_model.get_or_download().await?;
+        // Load the desired model
+        let ctx = WhisperContext::new(&model_path.to_string_lossy())
+            .map_err(|err| Error::LoadWhisperCtxFailed { source: err })?;
+        let ctx = Box::leak(Box::new(ctx));
+
+        Ok(Self {
+            dictation: Arc::new(Mutex::new(DictationState::None)),
+            whisper_ctx: ctx,
+        })
+    }
     /// Executes a dictation. This is not in itself asynchronous, but will
     /// return a future that will resolve when transcription is complete. Once
     /// this function returns that future (*before* its resolution), the app
@@ -33,6 +52,7 @@ impl AppState {
 
             // And a thread to perform both in sequence
             let dictation_sender = self.dictation.clone();
+            let whisper_ctx = self.whisper_ctx;
             let task = tokio::task::spawn_blocking(move || {
                 // This will complete when the receiver gets a signal
                 crate::record::start_recording(&path.path(), rx)?;
@@ -40,11 +60,7 @@ impl AppState {
                 // that has to be done by whoever sends the signal to end the recording, in order
                 // to actually access the underlying sender (Rust's ownership system enforces this!).
 
-                // We're now ready to transcribe
-                let transcription_model = futures::executor::block_on(async {
-                    Model::WhisperBase.get_or_download().await
-                })?;
-                let result = crate::transcribe::transcribe(&path.path(), &transcription_model)?;
+                let result = crate::transcribe::transcribe(&path.path(), whisper_ctx)?;
                 // Update the state so we're ready to finish up
                 // TODO Poisoning doesn't matter (and really should be impossible...)
                 *dictation_sender.lock().unwrap() = DictationState::None;
@@ -94,9 +110,4 @@ enum DictationState {
     Recording(oneshot::Sender<()>),
     Transcribing,
     None,
-}
-impl Default for DictationState {
-    fn default() -> Self {
-        Self::None
-    }
 }

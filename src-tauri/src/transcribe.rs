@@ -4,13 +4,8 @@ use std::path::Path;
 use whisper_rs::{FullParams, SamplingStrategy, WhisperContext};
 
 /// Transcribes the audio in the given file to a string of text.
-///
-/// This takes a pre-validated model path so it can be generic over model fetching, which
-/// will be different for standard models versus non-standard models.
-pub fn transcribe(file: &Path, model_path: &Path) -> Result<String, Error> {
-    // Load the model and create a state
-    let ctx = WhisperContext::new(&model_path.to_string_lossy())
-        .map_err(|err| Error::LoadWhisperCtxFailed { source: err })?;
+pub fn transcribe(file: &Path, ctx: &WhisperContext) -> Result<String, Error> {
+    // Create a state for this transcription run
     let mut state = ctx
         .create_state()
         .map_err(|err| Error::CreateWhisperStateFailed { source: err })?;
