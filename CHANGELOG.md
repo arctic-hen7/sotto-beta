@@ -2,6 +2,23 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [0.1.0-rc.14](/home/arctic-hen7/me/.main-mirror.git/compare/v0.1.0-rc.13...v0.1.0-rc.14) (2023-09-29)
+
+
+### Features
+
+* added model downloading ([99fe9a3](/home/arctic-hen7/me/.main-mirror.git/commit/99fe9a3c826f8427c72145cc54376919a64e180a))
+
+
+### Performance Improvements
+
+* added whisper context caching ([6418108](/home/arctic-hen7/me/.main-mirror.git/commit/641810834fae9df913c5bf4474de2bec47b24ee1))
+
+
+### Code Refactorings
+
+* improved error handling ([9e3d049](/home/arctic-hen7/me/.main-mirror.git/commit/9e3d049382a4baffbee3de72ad06cd0496c18086))
+
 ## [0.1.0-rc.13](/home/arctic-hen7/me/.main-mirror.git/compare/v0.1.0-rc.12...v0.1.0-rc.13) (2023-09-28)
 
 
