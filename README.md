@@ -12,12 +12,9 @@ So, while the original target audience of this app was the elderly, and those wh
 
 ## Usage
 
-*Before using Sotto, please ensure you have `ffmpeg` installed on your computer.*
-
 1. Download the latest version from [the releases page](https://github.com/arctic-hen7/sotto/releases).
-2. Make sure you have Python 3.10 (yes, the minor version matters!). On most systems, this can be trivially installed (e.g. `sudo apt install python3.10` on Debian and Ubuntu).
-3. Extract the downloaded Sotto archive.
-4. Inside that directory, run `bash install.sh` in a terminal. You will be prompted for your password to update the database of desktop applications on your computer.
+2. Extract the downloaded Sotto archive.
+3. Inside that directory, run `bash install.sh` in a terminal. You will be prompted for your password to update the database of desktop applications on your computer.
 
 On Linux, a `.desktop` file will be created for you, and you're done! On macOS, you will need to manually create the app's representation through Automator.
 
@@ -30,9 +27,3 @@ Well, the underlying AI is called *Whisper*, and, in music, we often refer to a 
 ## License
 
 This project is licensed under the MIT license, which you can see [here](https://github.com/arctic-hen7/sotto/blob/main/LICENSE).
-
-**--- The rest of this section does not constitute legal advice, and you should refer to the above license for details! ---**
-
-For those who just want to use this, and who aren't trained in the dark arts of Legalese, here's a short summary: you can download and use this app completely free of charge, and its source code is publicly available online so that anyone can report bugs and fix them. Any final changes to the code have to be approved by me for quality control, and I control when new updates are released, but you could even take all the code in here, repackage it and change the name, and re-release it yourself!
-
-If you're not really that technical, and wondering how the heck that works, bear in mind that I am not a company, I'm just a bloke who wanted to help his grandfather out. In the process, I made a handy little app that I find pretty useful, and, as long as I'm finding it useful, I may as well keep it updated so it can be helpful for others. That means you won't find any helpline to ring up if something goes wrong, and new updates won't come out as frequently as you might be used to with enterprise software, but, this app is completely free, and it always will be. Even if I stop working on the project one day, this will still be here for anyone to use.
