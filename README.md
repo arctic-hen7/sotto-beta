@@ -1,5 +1,7 @@
 # Sotto
 
+> **NOTE:** A new version of Sotto with many more features is under active development, and will be released some time in 2024. This version will no longer be maintained, however supports the same high-fidelity dictation, and will remain open-source.
+
 Sotto is a dead-simple recording and transcription app built on top of OpenAI's [Whisper](https://github.com/openai/whisper), an artifical intelligence capable of transcribing speech with near-human precision in dozens of languages. This app aims to make this technology accessible to everyone by creating a 'point-and-click' experience for transcription.
 
 ## Who is this for?
